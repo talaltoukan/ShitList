@@ -5,7 +5,8 @@ contract LinkedList {
 	event AddEntry(bytes32 head,uint stake,bytes32 symbol,bytes32 next);
 
 	bytes32 public head;
-	mapping(bytes => Object) public nodePointers;
+	mapping(bytes32 => Node) public nodePointers;
+	uint256 public stakePool;
 
 	struct Node{
 		bytes32 next;
@@ -13,16 +14,18 @@ contract LinkedList {
 		bytes32 symbol;
 	}
 	
-	constructor(){
-		head = 0;
+	constructor() public{
+		head = bytes32(0);
+		stakePool = 0;
 	}
 
-	function deleteNode(bytes32 _headSymbol) returns(uint256 deletedStake){
-		bytes32 prevPointer = 0;
+	function deleteNode(bytes32 _nodeSymbol) public returns(uint256){
+		bytes32 prevPointer = bytes32(0);
 		bytes32 curPointer = head;
-		while(curPointer != 0){
+		while(curPointer != bytes32(0)){
 			bytes32 curSymbol = nodePointers[curPointer].symbol;
-			if(curSymbol ==_headSymbol){
+			if(keccak256(abi.encodePacked(curSymbol)) == keccak256(abi.encodePacked(_nodeSymbol))){
+				stakePool = stakePool - nodePointers[curPointer].stake;
 				//If you are at head node
 				if(prevPointer == 0){
 					head = nodePointers[head].next;
@@ -36,26 +39,38 @@ contract LinkedList {
 			prevPointer = curPointer;
 			curPointer = nodePointers[curPointer].next;
 		}
+		return 0;
 	}
 
-	function addNode(uint256 _newStake, bytes32 _newSymbol){
-		bytes32 prevPointer = 0;
+	function addNode(uint256 _newStake, bytes32 _newSymbol) public {
+		bytes32 prevPointer = bytes32(0);
 		bytes32 curPointer = head;
-		while(curPointer != 0){
+		bool added = false;
+		Node memory newNode;
+		bytes32 newPointer;
+		stakePool += _newStake;
+		while(curPointer != bytes32(0)){
 			uint256 curStake = nodePointers[curPointer].stake;
 			if(curStake < _newStake){
-				Node newNode = Node(curPointer, _newStake, _newSymbol);
-				bytes32 newPointer = sha3(newNode.stake, newNode.symbol, now);
+				newNode = Node(curPointer, _newStake, _newSymbol);
+				newPointer = keccak256(abi.encodePacked(newNode.stake, newNode.symbol, now));
 				nodePointers[newPointer] = newNode;
-				if(prevNode != 0){
-					nodePointers[prevPointer].next = newPointer;
-				} else {
-					head = newPointer;
-				}
+				nodePointers[prevPointer].next = newPointer;
+				added = true;
 			} else {
 				prevPointer = curPointer;
 				curPointer = nodePointers[curPointer].next;
 			}
 		}
+		if(!added){
+			newNode = Node(bytes32(0), _newStake, _newSymbol);
+			newPointer = keccak256(abi.encodePacked(newNode.stake, newNode.symbol, now));
+			nodePointers[newPointer] = newNode;
+			head = newPointer;
+		}
+	}
+
+	function getStakePool() public view returns (uint256){
+		return stakePool;
 	}
 }

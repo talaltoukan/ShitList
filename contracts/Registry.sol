@@ -1,6 +1,7 @@
 pragma solidity ^0.4.23;
 
-import "LinkedList.sol";
+import "./LinkedList.sol";
+import "./Pausable.sol";
 
 contract Registry is Pausable{
 
