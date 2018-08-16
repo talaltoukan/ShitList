@@ -1,0 +1,25 @@
+{
+  "name": "shitlist",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/talaltoukan/ShitList.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/talaltoukan/ShitList/issues"
+  },
+  "homepage": "https://github.com/talaltoukan/ShitList#readme",
+  "dependencies": {
+    "web3": "^1.0.0-beta.35"
+  }
+}
