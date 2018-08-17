@@ -1,10 +1,11 @@
 pragma solidity ^0.4.23;
 
 import "./Pausable.sol";
+import "./RegistryHelper.sol";
 
-contract Registry is Pausable{
+contract Registry is Pausable, RegistryHelper{
 
-	mapping(string => address[]) symbolToStakers; 
+	mapping(bytes32 => address[]) symbolToStakers;
 
 	constructor() public{
 
@@ -12,9 +13,29 @@ contract Registry is Pausable{
 		
 	}
 
+	function stake(string symbolStr) public payable {
+		bytes32 sym = stringToBytes32(symbolStr);
+		if(symbolToStakers[sym].length == 0){
+			uint256 prevStake = deleteNode(sym);
+			addNode(msg.value + prevStake, sym);
+		} else {
+			addNode(msg.value, sym);
+		}
+		symbolToStakers[sym].push(msg.sender);
+	}
 
-
-
+	function getTop10() public view returns (bytes32[10]){
+		bytes32[10] memory top10;
+		bytes32 curP = head;
+		for(uint256 i = 0; i < 10; i++){
+			if(curP != bytes32(0)){
+				bytes32 curSym = nodePointers[curP].symbol;
+				top10[i] = curSym;
+				curP = nodePointers[curP].next;
+			}
+		}
+		return top10;
+	}
 
 	/*
 		LinkedList Implementation
@@ -83,7 +104,7 @@ contract Registry is Pausable{
 			head = newPointer;
 		}
 	}
-	
+
 	function getStakePool() public view returns (uint256){
 		return stakePool;
 	}
