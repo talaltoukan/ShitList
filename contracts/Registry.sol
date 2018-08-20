@@ -7,6 +7,9 @@ contract Registry is Pausable, RegistryHelper{
 
 	mapping(bytes32 => address[]) symbolToStakers;
 
+	event Staked(string symbolStr, uint256 amount, address from);
+
+
 	constructor() public{
 
 		owner = msg.sender;
@@ -15,10 +18,11 @@ contract Registry is Pausable, RegistryHelper{
 
 	function stake(string symbolStr) public payable {
 		bytes32 sym = stringToBytes32(symbolStr);
-		if(symbolToStakers[sym].length == 0){
+		if(symbolToStakers[sym].length != 0){
 			uint256 prevStake = deleteNode(sym);
 			addNode(msg.value + prevStake, sym);
 		} else {
+			emit Staked(symbolStr, msg.value, msg.sender);
 			addNode(msg.value, sym);
 		}
 		symbolToStakers[sym].push(msg.sender);
@@ -80,10 +84,18 @@ contract Registry is Pausable, RegistryHelper{
 	function addNode(uint256 _newStake, bytes32 _newSymbol) public {
 		bytes32 prevPointer = bytes32(0);
 		bytes32 curPointer = head;
-		bool added = false;
 		Node memory newNode;
 		bytes32 newPointer;
 		stakePool += _newStake;
+
+		if(head == bytes32(0)){
+			newNode = Node(bytes32(0), _newStake, _newSymbol);
+			newPointer = keccak256(abi.encodePacked(newNode.stake, newNode.symbol, now));
+			nodePointers[newPointer] = newNode;
+			head = newPointer;
+			emit AddedNode(bytes32(0), _newStake, _newSymbol);
+		}
+
 		while(curPointer != bytes32(0)){
 			uint256 curStake = nodePointers[curPointer].stake;
 			if(curStake < _newStake){
@@ -91,17 +103,23 @@ contract Registry is Pausable, RegistryHelper{
 				newPointer = keccak256(abi.encodePacked(newNode.stake, newNode.symbol, now));
 				nodePointers[newPointer] = newNode;
 				nodePointers[prevPointer].next = newPointer;
-				added = true;
+				emit AddedNode(curPointer, _newStake, _newSymbol);
+
+				if(curPointer == head){
+					head = newPointer;
+				}
+				curPointer = bytes32(0);
 			} else {
 				prevPointer = curPointer;
 				curPointer = nodePointers[curPointer].next;
+				if(curPointer == bytes32(0)){
+					newNode = Node(bytes32(0), _newStake, _newSymbol);
+					newPointer = keccak256(abi.encodePacked(newNode.stake, newNode.symbol, now));
+					nodePointers[newPointer] = newNode;
+					nodePointers[prevPointer].next = newPointer;
+					emit AddedNode(bytes32(0), _newStake, _newSymbol);
+				}
 			}
-		}
-		if(!added){
-			newNode = Node(bytes32(0), _newStake, _newSymbol);
-			newPointer = keccak256(abi.encodePacked(newNode.stake, newNode.symbol, now));
-			nodePointers[newPointer] = newNode;
-			head = newPointer;
 		}
 	}
 
