@@ -1,19 +1,20 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import { Navbar, Nav, NavItem } from 'react-bootstrap'
 
 import getWeb3 from "./utils/getWeb3.js";
 
+import Landing from "./Landing";
 
 const RegistryABI = require('./contracts/Registry.json');
-
 const contract = require('truffle-contract');
 
 class App extends Component<props> {
 	state = {
 		web3: null,
-		accounts: null
+		accounts: null,
+		registry: null
 	}
 
 	async componentDidMount() {
@@ -54,6 +55,7 @@ class App extends Component<props> {
 		    draggablePercent: 0
 		  })
 		}	
+		this.setState({ registry: instance });
 	}
 
 	render() {
@@ -79,8 +81,8 @@ class App extends Component<props> {
 		            </Navbar>
 
 		            <Switch>
-		              {/*<Route exact path="/" render={(props) => ( <Landing {...props} {...this.state} /> )} />
-		              <Route path="/faq" render={(props) => (<FAQ {...props} {...this.state} />)} />
+		              <Route exact path="/" render={(props) => ( <Landing {...props} {...this.state} /> )} />
+		              {/*<Route path="/faq" render={(props) => (<FAQ {...props} {...this.state} />)} />
 		              <Route exact path="/error" render={(props) => (<Error {...props} {...this.state} />)} />
 		              <Redirect from="*" to="/error" /> */}
 		            </Switch>
